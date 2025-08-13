@@ -273,6 +273,8 @@ class Game2048 {
     }
 
     updateScore() {
+        console.log(111)
+        console.log(222)
         this.scoreElement.textContent = this.score;
         if (this.score > this.highScore) {
             this.highScore = this.score;
