@@ -3,8 +3,82 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="经典2048数字游戏，流畅的动画体验" />
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000" />
+    <meta http-equiv="Expires" content="Thu, 31 Dec 2025 23:59:59 GMT" />
     <title>2048游戏</title>
-    <link rel="stylesheet" href="style.css" />
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="style.css" as="style" />
+    <link rel="preload" href="script.js" as="script" />
+    
+    <!-- DNS预解析 -->
+    <link rel="dns-prefetch" href="//localhost" />
+    
+    <!-- 关键CSS内联 -->
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #faf8ef;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        box-sizing: border-box;
+        overscroll-behavior: none;
+        touch-action: none;
+      }
+      .container {
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        padding: 10px;
+      }
+      h1 {
+        font-size: clamp(2rem, 8vw, 3rem);
+        color: #776e65;
+        margin: 10px 0;
+      }
+      .grid {
+        background-color: #bbada0;
+        border-radius: 6px;
+        position: relative;
+        width: 100%;
+        margin: 0 auto;
+      }
+      .grid::before {
+        content: "";
+        display: block;
+        padding-top: 100%;
+      }
+      .cell {
+        position: absolute;
+        width: calc(25% - 10px);
+        height: calc(25% - 10px);
+        margin: 5px;
+        background-color: #cdc1b4;
+        border-radius: 3px;
+      }
+      .tile {
+        position: absolute;
+        width: calc(25% - 10px);
+        height: calc(25% - 10px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        border-radius: 3px;
+        z-index: 1;
+        margin: 5px;
+        will-change: transform;
+        transform: translateZ(0);
+      }
+    </style>
+    
+    <!-- 非关键CSS异步加载 -->
+    <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="style.css" /></noscript>
   </head>
   <body>
     <div class="container">
