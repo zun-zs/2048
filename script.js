@@ -139,41 +139,26 @@ class Game2048 {
 
     createTileElement(position, value) {
         const tile = this.getTileFromPool();
-        tile.className = 'tile new';
+        tile.className = 'tile';
         tile.textContent = value;
         tile.setAttribute('data-value', value);
         this.setTilePosition(tile, position);
         tile.style.transform = 'translateZ(0) scale(0)';
         this.container.appendChild(tile);
-        
-        // 使用RAF优化动画
         requestAnimationFrame(() => {
             tile.style.transform = 'translateZ(0) scale(1)';
-            // 移除new类以避免重复动画
-            setTimeout(() => tile.classList.remove('new'), 200);
         });
-        
         return tile;
     }
 
     setTilePosition(tile, position) {
         const row = Math.floor(position / 4);
         const col = position % 4;
-        
-        // 使用transform代替top/left以获得更好的性能
-        const translateX = col * 25;
-        const translateY = row * 25;
-        
-        // 保持现有的scale值
-        const currentTransform = tile.style.transform;
-        const scaleMatch = currentTransform.match(/scale\(([^)]+)\)/);
-        const scale = scaleMatch ? scaleMatch[1] : '1';
-        
-        tile.style.transform = `translateZ(0) translate(${translateX}%, ${translateY}%) scale(${scale})`;
-        
-        // 设置初始位置（用于CSS定位）
+        // 考虑到网格间隙的位置计算
         tile.style.top = `${row * 25}%`;
         tile.style.left = `${col * 25}%`;
+        // 保持GPU加速但简化transform
+        tile.style.transform = 'translateZ(0)';
     }
 
     addNewTile() {
@@ -330,53 +315,27 @@ class Game2048 {
     }
 
     async animateMoves(moves) {
-        if (moves.length === 0) return;
-        
-        // 批量DOM读取和写入分离
-        const tileUpdates = [];
-        
-        // 第一阶段：批量读取DOM状态
-        moves.forEach(move => {
-            const tile = this.tiles.get(move.from);
-            if (tile) {
-                tileUpdates.push({
-                    tile,
-                    move,
-                    currentTransform: tile.style.transform
-                });
-            }
-        });
-        
-        // 第二阶段：批量写入DOM
-        return new Promise(resolve => {
-            // 使用RAF确保在下一帧执行
-            requestAnimationFrame(() => {
-                tileUpdates.forEach(({ tile, move }) => {
+        const animationPromises = moves.map(move => {
+            return new Promise(resolve => {
+                const tile = this.tiles.get(move.from);
+                if (tile) {
                     this.setTilePosition(tile, move.to);
-                    
                     if (move.merge) {
-                        const mergeTile = this.tiles.get(move.to);
-                        if (mergeTile) {
-                            tile.addEventListener('transitionend', () => {
-                                tile.remove();
-                                mergeTile.textContent = move.value;
-                                mergeTile.setAttribute('data-value', move.value);
-                                mergeTile.classList.add('merged');
-                                setTimeout(() => {
-                                    mergeTile.classList.remove('merged');
-                                }, 200);
-                            }, { once: true });
-                        }
-                    } else {
-                        this.tiles.set(move.to, tile);
+                        tile.classList.add('merged');
+                        tile.textContent = move.value;
+                        tile.setAttribute('data-value', move.value);
+                        setTimeout(() => tile.classList.remove('merged'), 200);
                     }
+                    this.tiles.set(move.to, tile);
                     this.tiles.delete(move.from);
-                });
-                
-                // 统一的动画完成时间
-                setTimeout(resolve, 200);
+                    setTimeout(resolve, 200);
+                } else {
+                    resolve();
+                }
             });
         });
+
+        await Promise.all(animationPromises);
     }
 
     updateScore() {
